@@ -3,7 +3,7 @@ from itertools import product
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from .models import Product, Cart, CartItem
+from .models import Product, Cart, CartItem, ContactMessage
 
 
 from shop.models import Product
@@ -59,3 +59,15 @@ def cart_detail(request):
     # this ensures the page loads with an empty cart instead of a 500 error.
     cart, created = Cart.objects.get_or_create(user=request.user)
     return render(request, 'shop/cart-detail.html', {'cart': cart})
+
+@login_required
+def contact_page(request):
+    if request.method == "POST":
+        msg_text = request.POST.get('message')
+        if msg_text:
+            ContactMessage.objects.create(user=request.user, message=msg_text)
+            return redirect('contact_page')
+
+    # Fetch all messages for this user to show the chat history
+    chat_history = ContactMessage.objects.filter(user=request.user)
+    return render(request, 'shop/contact.html', {'chat_history': chat_history})
